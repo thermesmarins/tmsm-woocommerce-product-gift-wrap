@@ -75,11 +75,14 @@ class WC_Product_Gift_Wrap {
 		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'gift_option_html' ), 30 );
 
 		// Filters for cart actions
-		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'add_cart_item_data' ), 10, 2 );
+		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'woocommerce_add_cart_item_data' ), 10, 2 );
 		add_filter( 'woocommerce_get_cart_item_from_session', array( $this, 'get_cart_item_from_session' ), 10, 2 );
 		add_filter( 'woocommerce_get_item_data', array( $this, 'get_item_data' ), 10, 2 );
 		add_filter( 'woocommerce_add_cart_item', array( $this, 'add_cart_item' ), 10, 1 );
-		add_action( 'woocommerce_add_order_item_meta', array( $this, 'add_order_item_meta' ), 10, 2 );
+		add_action( 'woocommerce_add_order_item_meta', array( $this, 'woocommerce_add_order_item_meta' ), 10, 2 );
+		add_action( 'woocommerce_display_item_meta', array( $this, 'woocommerce_display_item_meta' ), 10, 3 );
+		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'woocommerce_checkout_create_order_line_item' ), 10, 4 );
+		add_action( 'woocommerce_order_item_get_formatted_meta_data', array( $this, 'woocommerce_order_item_get_formatted_meta_data' ), 10, 2 );
 
 		// Write Panels
 		add_action( 'woocommerce_product_options_pricing', array( $this, 'write_panel' ) );
@@ -163,7 +166,7 @@ class WC_Product_Gift_Wrap {
 				}
 
 				$price_text = $cost > 0 ? wc_price( $cost ) : __( 'free', 'woocommerce-product-gift-wrap' );
-				$checkbox   = '<input type="checkbox" name="gift_wrap['.$variation_id.']" value="yes" ' . checked( $current_value, 1, false ) . ' />';
+				$checkbox   = '<input type="checkbox" name="_gift_wrap['.$variation_id.']" value="yes" ' . checked( $current_value, 1, false ) . ' />';
 
 				wc_get_template( 'gift-wrap.php', array(
 					'product_gift_wrap_message' => $this->product_gift_wrap_message,
@@ -222,15 +225,15 @@ class WC_Product_Gift_Wrap {
 	 * @param mixed $product_id
 	 * @return void
 	 */
-	public function add_cart_item_data( $cart_item_meta, $product_id ) {
+	public function woocommerce_add_cart_item_data( $cart_item_meta, $product_id ) {
 		$is_wrappable = get_post_meta( $product_id, '_is_gift_wrappable', true );
 
 		if ( $is_wrappable == '' && $this->gift_wrap_enabled ) {
 			$is_wrappable = 'yes';
 		}
 
-		if ( ! empty( $_POST['gift_wrap'] ) && $is_wrappable == 'yes' ) {
-			$cart_item_meta['gift_wrap'] = true;
+		if ( ! empty( $_POST['_gift_wrap'] ) && $is_wrappable == 'yes' ) {
+			$cart_item_meta['_gift_wrap'] = 'yes';
 		}
 
 		return $cart_item_meta;
@@ -246,8 +249,8 @@ class WC_Product_Gift_Wrap {
 	 */
 	public function get_cart_item_from_session( $cart_item, $values ) {
 
-		if ( ! empty( $values['gift_wrap'] ) ) {
-			$cart_item['gift_wrap'] = true;
+		if ( ! empty( $values['_gift_wrap'] ) ) {
+			$cart_item['_gift_wrap'] = 'yes';
 
 			$cost = get_post_meta( $cart_item['data']->id, '_gift_wrap_cost', true );
 
@@ -270,11 +273,12 @@ class WC_Product_Gift_Wrap {
 	 * @return void
 	 */
 	public function get_item_data( $item_data, $cart_item ) {
-		if ( ! empty( $cart_item['gift_wrap'] ) )
+		if ( ! empty( $cart_item['_gift_wrap'] ) && $cart_item['_gift_wrap'] == 'yes')
 			$item_data[] = array(
 				'name'    => __( 'Gift Wrapped', 'woocommerce-product-gift-wrap' ),
-				'value'   => __( 'Yes', 'woocommerce-product-gift-wrap' ),
-				'display' => __( 'Yes', 'woocommerce-product-gift-wrap' )
+				'value'   => 'yes',
+				'display' => __( 'Yes', 'woocommerce-product-gift-wrap' ),
+				'hidden' => false
 			);
 
 		return $item_data;
@@ -288,7 +292,7 @@ class WC_Product_Gift_Wrap {
 	 * @return mixed
 	 */
 	public function add_cart_item( $cart_item ) {
-		if ( ! empty( $cart_item['gift_wrap'] ) ) {
+		if ( ! empty( $cart_item['_gift_wrap'] ) &&  $cart_item['_gift_wrap'] == 'yes') {
 
 			$cost = get_post_meta( $cart_item['data']->id, '_gift_wrap_cost', true );
 
@@ -310,11 +314,59 @@ class WC_Product_Gift_Wrap {
 	 * @param mixed $values
 	 * @return void
 	 */
-	public function add_order_item_meta( $item_id, $cart_item ) {
-		if ( ! empty( $cart_item['gift_wrap'] ) ) {
-			wc_add_order_item_meta( $item_id, __( 'Gift Wrapped', 'woocommerce-product-gift-wrap' ), __( 'Yes', 'woocommerce-product-gift-wrap' ) );
+	public function woocommerce_add_order_item_meta( $item_id, $cart_item ) {
+		if ( ! empty( $cart_item['_gift_wrap'] ) &&  $cart_item['_gift_wrap'] == 'yes') {
+			//wc_add_order_item_meta( $item_id, __( 'Gift Wrapped', 'woocommerce-product-gift-wrap' ), __( 'Yes', 'woocommerce-product-gift-wrap' ) );
 		}
 	}
+
+
+	/**
+	 * Displays hidden delivery date for order item in order view (frontend)
+	 * /my-account/view-order/$order_id/
+	 * /checkout/order-received/$order_id/
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param  string        $html
+	 * @param  WC_Order_Item $item
+	 * @param  array         $args
+	 *
+	 * @return string
+	 */
+	public function woocommerce_display_item_meta( $html, $item, $args ) {
+
+		$strings = [];
+
+		if ( !empty($item->get_meta( '_gift_wrap' )) && $item->get_meta( '_gift_wrap' ) == 'yes') {
+			$strings[]           = '<strong class="wc-item-meta-label">' . __( 'Gift Wrapped:', 'woocommerce-product-gift-wrap' ) . '</strong> '
+			                       . __( 'Yes', 'woocommerce-product-gift-wrap' );
+		}
+
+		if ( $strings != [] ) {
+			$html .= $args['before'] . implode( $args['separator'], $strings ) . $args['after'];
+		}
+		return $html;
+	}
+
+	/**
+	 * Update order item's meta with recipient data
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param WC_Order_Item_Product $item
+	 * @param string                $cart_item_key
+	 * @param array                 $values
+	 * @param WC_Order              $order
+	 */
+	public function woocommerce_checkout_create_order_line_item( $item, $cart_item_key, $values, $order ) {
+
+		if ( ! empty( $values['_gift_wrap'] ) &&  $values['_gift_wrap'] == 'yes') {
+			$item->add_meta_data( '_gift_wrap', 'yes', true );
+		}
+
+	}
+
 
 	/**
 	 * write_panel function.
@@ -395,6 +447,34 @@ class WC_Product_Gift_Wrap {
 	 */
 	public function save_admin_settings() {
 		woocommerce_update_options( $this->settings );
+	}
+
+	/**
+	 * Displays recipient item meta on order page
+	 *
+	 * @version 1.0.0
+	 * @since   1.0.0
+	 *
+	 * @param mixed         $formatted_meta
+	 * @param WC_Order_Item $order_item
+	 *
+	 * @return mixed
+	 */
+	public function woocommerce_order_item_get_formatted_meta_data( $formatted_meta, WC_Order_Item $order_item ) {
+		if ( empty( $formatted_meta ) ) {
+			return $formatted_meta;
+		}
+
+		foreach ( $formatted_meta as $meta ) {
+
+			if($meta->key == '_gift_wrap' && !empty($meta->value) && $meta->value == 'yes'){
+				$meta->display_key = __('Gift Wrapped', 'woocommerce-product-gift-wrap');
+				$meta->display_value = __('Yes', 'woocommerce-product-gift-wrap');
+			}
+
+		}
+
+		return $formatted_meta;
 	}
 }
 
