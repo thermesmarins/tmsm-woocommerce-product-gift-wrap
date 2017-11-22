@@ -8,7 +8,7 @@ Author: Nicolas Mollet
 Author URI: http://www.nicolasmollet.com
 Requires at least: 4.5
 Tested up to: 4.8
-Text Domain: woocommerce-product-gift-wrap
+Text Domain: tmsm-woocommerce-product-gift-wrap
 Domain Path: /languages/
 Github Plugin URI: https://github.com/thermesmarins/tmsm-woocommerce-product-gift-wrap
 Github Branch: master
@@ -20,18 +20,18 @@ Original Author: Mike Jolley
 /**
  * Localisation
  */
-load_plugin_textdomain( 'woocommerce-product-gift-wrap', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+load_plugin_textdomain( 'tmsm-woocommerce-product-gift-wrap', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 /**
- * WC_Product_Gift_wrap class.
+ * TMSM_WooCommerce_Product_Gift_Wrap class.
  */
-class WC_Product_Gift_Wrap {
+class TMSM_WooCommerce_Product_Gift_Wrap {
 
 	/**
+	 * TMSM_WooCommerce_Product_Gift_Wrap constructor.
 	 * Hook us in :)
 	 *
 	 * @access public
-	 * @return void
 	 */
 	public function __construct() {
 		$default_message                 = '{checkbox} '. sprintf( __( 'Gift wrap this item for %s?', 'woocommerce-product-gift-wrap' ), '{price}' );
@@ -478,4 +478,4 @@ class WC_Product_Gift_Wrap {
 	}
 }
 
-new WC_Product_Gift_Wrap();
+new TMSM_WooCommerce_Product_Gift_Wrap();
