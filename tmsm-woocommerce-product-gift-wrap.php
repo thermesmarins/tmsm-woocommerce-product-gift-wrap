@@ -34,7 +34,7 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 	 * @access public
 	 */
 	public function __construct() {
-		$default_message                 = '{checkbox} '. sprintf( __( 'Gift wrap this item for %s?', 'woocommerce-product-gift-wrap' ), '{price}' );
+		$default_message                 = '{checkbox} '. sprintf( __( 'Gift wrap this item for %s?', 'tmsm-woocommerce-product-gift-wrap' ), '{price}' );
 		$this->gift_wrap_enabled         = get_option( 'product_gift_wrap_enabled' ) == 'yes' ? true : false;
 		$this->gift_wrap_cost            = get_option( 'product_gift_wrap_cost', 0 );
 		$this->product_gift_wrap_message = get_option( 'product_gift_wrap_message' );
@@ -50,24 +50,24 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 		// Init settings
 		$this->settings = array(
 			array(
-				'name' 		=> __( 'Gift Wrapping Enabled by Default?', 'woocommerce-product-gift-wrap' ),
-				'desc' 		=> __( 'Enable this to allow gift wrapping for products by default.', 'woocommerce-product-gift-wrap' ),
+				'name' 		=> __( 'Product gift wrapping enabled by default?', 'tmsm-woocommerce-product-gift-wrap' ),
+				'desc' 		=> __( 'Enable this to allow gift wrapping for products by default.', 'tmsm-woocommerce-product-gift-wrap' ),
 				'id' 		=> 'product_gift_wrap_enabled',
 				'type' 		=> 'checkbox',
 			),
 			array(
-				'name' 		=> __( 'Default Gift Wrap Cost', 'woocommerce-product-gift-wrap' ),
-				'desc' 		=> __( 'The cost of gift wrap unless overridden per-product.', 'woocommerce-product-gift-wrap' ),
+				'name' 		=> __( 'Default product gift wrap cost', 'tmsm-woocommerce-product-gift-wrap' ),
+				'desc' 		=> __( 'The cost of gift wrap unless overridden per-product.', 'tmsm-woocommerce-product-gift-wrap' ),
 				'id' 		=> 'product_gift_wrap_cost',
 				'type' 		=> 'text',
 				'desc_tip'  => true
 			),
 			array(
-				'name' 		=> __( 'Gift Wrap Message', 'woocommerce-product-gift-wrap' ),
+				'name' 		=> __( 'Product gift wrap message', 'tmsm-woocommerce-product-gift-wrap' ),
 				'id' 		=> 'product_gift_wrap_message',
-				'desc' 		=> __( 'Note: <code>{checkbox}</code> will be replaced with a checkbox and <code>{price}</code> will be replaced with the gift wrap cost.', 'woocommerce-product-gift-wrap' ),
+				'desc' 		=> __( 'Note: <code>{checkbox}</code> will be replaced with a checkbox and <code>{price}</code> will be replaced with the gift wrap cost.', 'tmsm-woocommerce-product-gift-wrap' ),
 				'type' 		=> 'text',
-				'desc_tip'  => __( 'The checkbox and label shown to the user on the frontend.', 'woocommerce-product-gift-wrap' )
+				'desc_tip'  => __( 'The checkbox and label shown to the user on the frontend.', 'tmsm-woocommerce-product-gift-wrap' )
 			),
 		);
 
@@ -84,15 +84,19 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'woocommerce_checkout_create_order_line_item' ), 10, 4 );
 		add_action( 'woocommerce_order_item_get_formatted_meta_data', array( $this, 'woocommerce_order_item_get_formatted_meta_data' ), 10, 2 );
 
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+
+
 		// Write Panels
 		add_action( 'woocommerce_product_options_pricing', array( $this, 'write_panel' ) );
 		add_action( 'woocommerce_process_product_meta', array( $this, 'write_panel_save' ) );
 
 		// Admin
-		add_action( 'woocommerce_settings_general_options_end', array( $this, 'admin_settings' ) );
-		add_action( 'woocommerce_update_options_general', array( $this, 'save_admin_settings' ) );
+		add_action( 'woocommerce_settings_catalog_options', array( $this, 'admin_settings' ) );
 
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'woocommerce_update_options_catalog_options', array( $this, 'save_admin_settings' ) );
+
+
 	}
 
 	/**
@@ -101,9 +105,8 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 	 * @since    1.0.1
 	 */
 	public function enqueue_scripts(){
-		wp_enqueue_script( 'woocommerce-product-gift-wrap', plugin_dir_url( __FILE__ ) . 'assets/js/tmsm-woocommerce-product-gift.js', array( 'jquery' ), null, true );
+		wp_enqueue_script( 'tmsm-woocommerce-product-gift-wrap', plugin_dir_url( __FILE__ ) . 'assets/js/tmsm-woocommerce-product-gift-wrap.js', array( 'jquery' ), null, true );
 	}
-
 
 	/**
 	 * Show the Gift Checkbox on the frontend
@@ -165,7 +168,7 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 					$cost = $this->gift_wrap_cost;
 				}
 
-				$price_text = $cost > 0 ? wc_price( $cost ) : __( 'free', 'woocommerce-product-gift-wrap' );
+				$price_text = $cost > 0 ? wc_price( $cost ) : __( 'free', 'tmsm-woocommerce-product-gift-wrap' );
 				$checkbox   = '<input type="checkbox" name="_gift_wrap['.$variation_id.']" value="yes" ' . checked( $current_value, 1, false ) . ' />';
 
 				wc_get_template( 'gift-wrap.php', array(
@@ -173,7 +176,7 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 					'product'                  => $product,
 					'checkbox'                  => $checkbox,
 					'price_text'                => $price_text
-				), 'woocommerce-product-gift-wrap', untrailingslashit( plugin_dir_path( __FILE__ ) ) . '/templates/' );
+				), 'tmsm-woocommerce-product-gift-wrap', untrailingslashit( plugin_dir_path( __FILE__ ) ) . '/templates/' );
 			}
 
 		}
@@ -206,14 +209,14 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 				$cost = $this->gift_wrap_cost;
 			}
 
-			$price_text = $cost > 0 ? wc_price( $cost ) : __( 'free', 'woocommerce-product-gift-wrap' );
+			$price_text = $cost > 0 ? wc_price( $cost ) : __( 'free', 'tmsm-woocommerce-product-gift-wrap' );
 			$checkbox   = '<input type="checkbox" name="gift_wrap" value="yes" ' . checked( $current_value, 1, false ) . ' />';
 
 			wc_get_template( 'gift-wrap.php', array(
 				'product_gift_wrap_message' => $this->product_gift_wrap_message,
 				'checkbox'                  => $checkbox,
 				'price_text'                => $price_text
-			), 'woocommerce-product-gift-wrap', untrailingslashit( plugin_dir_path( __FILE__ ) ) . '/templates/' );
+			), 'tmsm-woocommerce-product-gift-wrap', untrailingslashit( plugin_dir_path( __FILE__ ) ) . '/templates/' );
 		}*/
 	}
 
@@ -275,9 +278,9 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 	public function get_item_data( $item_data, $cart_item ) {
 		if ( ! empty( $cart_item['_gift_wrap'] ) && $cart_item['_gift_wrap'] == 'yes')
 			$item_data[] = array(
-				'name'    => __( 'Gift Wrapped', 'woocommerce-product-gift-wrap' ),
+				'name'    => __( 'Gift Wrapped', 'tmsm-woocommerce-product-gift-wrap' ),
 				'value'   => 'yes',
-				'display' => __( 'Yes', 'woocommerce-product-gift-wrap' ),
+				'display' => __( 'Yes', 'tmsm-woocommerce-product-gift-wrap' ),
 				'hidden' => false
 			);
 
@@ -316,7 +319,7 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 	 */
 	public function woocommerce_add_order_item_meta( $item_id, $cart_item ) {
 		if ( ! empty( $cart_item['_gift_wrap'] ) &&  $cart_item['_gift_wrap'] == 'yes') {
-			//wc_add_order_item_meta( $item_id, __( 'Gift Wrapped', 'woocommerce-product-gift-wrap' ), __( 'Yes', 'woocommerce-product-gift-wrap' ) );
+			//wc_add_order_item_meta( $item_id, __( 'Gift Wrapped', 'tmsm-woocommerce-product-gift-wrap' ), __( 'Yes', 'tmsm-woocommerce-product-gift-wrap' ) );
 		}
 	}
 
@@ -339,8 +342,8 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 		$strings = [];
 
 		if ( !empty($item->get_meta( '_gift_wrap' )) && $item->get_meta( '_gift_wrap' ) == 'yes') {
-			$strings[]           = '<strong class="wc-item-meta-label">' . __( 'Gift Wrapped:', 'woocommerce-product-gift-wrap' ) . '</strong> '
-			                       . __( 'Yes', 'woocommerce-product-gift-wrap' );
+			$strings[]           = '<strong class="wc-item-meta-label">' . __( 'Gift Wrapped:', 'tmsm-woocommerce-product-gift-wrap' ) . '</strong> '
+			                       . __( 'Yes', 'tmsm-woocommerce-product-gift-wrap' );
 		}
 
 		if ( $strings != [] ) {
@@ -389,16 +392,16 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 				'id'            => '_is_gift_wrappable',
 				'wrapper_class' => '',
 				'value'         => $is_wrappable,
-				'label'         => __( 'Gift Wrappable', 'woocommerce-product-gift-wrap' ),
-				'description'   => __( 'Enable this option if the customer can choose gift wrapping.', 'woocommerce-product-gift-wrap' ),
+				'label'         => __( 'Gift Wrappable', 'tmsm-woocommerce-product-gift-wrap' ),
+				'description'   => __( 'Enable this option if the customer can choose gift wrapping.', 'tmsm-woocommerce-product-gift-wrap' ),
 			) );
 
 		woocommerce_wp_text_input( array(
 				'id'          => '_gift_wrap_cost',
-				'label'       => __( 'Gift Wrap Cost', 'woocommerce-product-gift-wrap' ),
+				'label'       => __( 'Gift Wrap Cost', 'tmsm-woocommerce-product-gift-wrap' ),
 				'placeholder' => $this->gift_wrap_cost,
 				'desc_tip'    => true,
-				'description' => __( 'Override the default cost by inputting a cost here.', 'woocommerce-product-gift-wrap' ),
+				'description' => __( 'Override the default cost by inputting a cost here.', 'tmsm-woocommerce-product-gift-wrap' ),
 			) );
 
 		wc_enqueue_js( "
@@ -468,8 +471,8 @@ class TMSM_WooCommerce_Product_Gift_Wrap {
 		foreach ( $formatted_meta as $meta ) {
 
 			if($meta->key == '_gift_wrap' && !empty($meta->value) && $meta->value == 'yes'){
-				$meta->display_key = __('Gift Wrapped', 'woocommerce-product-gift-wrap');
-				$meta->display_value = __('Yes', 'woocommerce-product-gift-wrap');
+				$meta->display_key = __('Gift Wrapped', 'tmsm-woocommerce-product-gift-wrap');
+				$meta->display_value = __('Yes', 'tmsm-woocommerce-product-gift-wrap');
 			}
 
 		}
