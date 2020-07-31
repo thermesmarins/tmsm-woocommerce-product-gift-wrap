@@ -1,3 +1,5 @@
+* Refactoring
+
 ### 1.1.2: November 1st, 2017
 * **Fix** - Meta key name '_gift_wrap' consistence 
 * **Tweak** - Update FR translation
