@@ -3,7 +3,7 @@
 Plugin Name: TMSM WooCommerce Product Gift Wrap
 Plugin URI: https://github.com/thermesmarins/tmsm-woocommerce-product-gift-wrap
 Description: Add an option to your products to enable gift wrapping. Optionally charge a fee.
-Version: 1.1.2
+Version: 1.1.3
 Author: Nicolas Mollet
 Author URI: http://www.nicolasmollet.com
 Requires at least: 4.5

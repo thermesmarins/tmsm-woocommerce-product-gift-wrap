@@ -1,3 +1,4 @@
+### 1.1.3: July 31st, 2020
 * Refactoring
 
 ### 1.1.2: November 1st, 2017

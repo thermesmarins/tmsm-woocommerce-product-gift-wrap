@@ -1,9 +1,9 @@
 <?php
 /**
- * @param $product WC_Product
- * @param $price_text Price text
- * @param $checkbox Checkbox value
- * @param $product_gift_wrap_message Wrap message
+ * @param WC_Product $product
+ * @param string $price_text
+ * @param string $checkbox Checkbox
+ * @param string $product_gift_wrap_message
  */
 ?>
 
